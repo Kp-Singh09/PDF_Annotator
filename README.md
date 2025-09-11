@@ -2,26 +2,26 @@
 
 This repository contains the backend server for the Full-Stack PDF Annotator application. It is built with Node.js and Express and is responsible for handling user authentication, file storage, and managing highlight data.
 
-## [cite_start]Overview of Architecture and Features [cite: 68]
+## Overview of Architecture and Features
 
 The backend provides a RESTful API that the React frontend consumes. Its primary responsibilities include:
 
-* [cite_start]**User Authentication**: Handles user registration and login using a JWT-based system[cite: 11, 13, 36].
+* **User Authentication**: Handles user registration and login using a JWT-based system.
 * **PDF Management**:
-    * [cite_start]Accepts PDF file uploads and stores them on the local server file system[cite: 39, 54].
-    * [cite_start]Generates a unique UUID for each uploaded PDF for easy tracking[cite: 6, 40].
-    * [cite_start]Saves PDF metadata (filename, UUID, associated user) to a MongoDB database[cite: 41, 52].
-* [cite_start]**Highlight Management**: Provides CRUD (Create, Retrieve, Update, Delete) endpoints for saving and managing text highlight data[cite: 43]. [cite_start]Each highlight is linked to a specific user and PDF[cite: 45].
-* [cite_start]**PDF Library**: An API endpoint to fetch a list of all PDFs that belong to the currently authenticated user[cite: 48].
+    * Accepts PDF file uploads and stores them on the local server file system.
+    * Generates a unique UUID for each uploaded PDF for easy tracking.
+    * Saves PDF metadata (filename, UUID, associated user) to a MongoDB database.
+* **Highlight Management**: Provides CRUD (Create, Retrieve, Update, Delete) endpoints for saving and managing text highlight data. Each highlight is linked to a specific user and PDF.
+* **PDF Library**: An API endpoint to fetch a list of all PDFs that belong to the currently authenticated user.
 
 ## Tech Stack
 
-* [cite_start]**Runtime**: Node.js [cite: 51]
-* [cite_start]**Framework**: Express [cite: 51]
-* [cite_start]**Database**: MongoDB with Mongoose [cite: 52, 56]
-* [cite_start]**Authentication**: JSON Web Tokens (JWT) [cite: 53]
-* [cite_start]**File Handling**: Multer [cite: 56]
-* [cite_start]**Unique IDs**: UUID [cite: 55]
+* **Runtime**: Node.js
+* **Framework**: Express
+* **Database**: MongoDB with Mongoose
+* **Authentication**: JSON Web Tokens (JWT)
+* **File Handling**: Multer
+* **Unique IDs**: UUID
 
 ## [cite_start]Setup and Installation [cite: 69]
 
