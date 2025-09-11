@@ -3,44 +3,31 @@ const PDF = require('../models/PDF');
 
 // Create highlight
 exports.createHighlight = async (req, res) => {
+  const { pdfUuid, text, position, pageNumber, color } = req.body; // Add color
+  const userId = req.user.id;
+
   try {
-    const { pdfUuid, pageNumber, text, position, color } = req.body;
+      const pdf = await PDF.findOne({ uuid: pdfUuid, user: userId });
+      if (!pdf) {
+          return res.status(404).json({ success: false, message: 'PDF not found' });
+      }
 
-    // Find PDF
-    const pdf = await PDF.findOne({ uuid: pdfUuid, user: req.user.id });
-    if (!pdf) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'PDF not found' 
+      const highlight = new Highlight({
+          pdf: pdf._id,
+          user: userId,
+          text,
+          position,
+          pageNumber,
+          color // Add color
       });
-    }
 
-    const highlight = new Highlight({
-      pdf: pdf._id,
-      user: req.user.id,
-      pageNumber,
-      text,
-      position,
-      color: color || '#ffeb3b'
-    });
-
-    await highlight.save();
-    
-    // Populate PDF info
-    await highlight.populate('pdf', 'uuid originalName');
-
-    res.status(201).json({
-      success: true,
-      highlight
-    });
+      await highlight.save();
+      res.status(201).json({ success: true, highlight });
   } catch (error) {
-    console.error('Create highlight error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error creating highlight' 
-    });
+      res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
+
 
 // Get highlights for PDF
 exports.getHighlights = async (req, res) => {
@@ -132,5 +119,22 @@ exports.deleteHighlight = async (req, res) => {
       success: false, 
       message: 'Server error deleting highlight' 
     });
+  }
+};
+exports.updateHighlightIntensity = async (req, res) => {
+  try {
+      const highlight = await Highlight.findOne({ _id: req.params.id, user: req.user.id });
+
+      if (!highlight) {
+          return res.status(404).json({ success: false, message: 'Highlight not found' });
+      }
+
+      // Increment intensity, cap at a reasonable max (e.g., 5 levels)
+      highlight.intensity = Math.min((highlight.intensity || 1) + 1, 5);
+      
+      await highlight.save();
+      res.json({ success: true, highlight });
+  } catch (error) {
+      res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };

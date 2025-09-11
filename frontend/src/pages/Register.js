@@ -1,121 +1,86 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+// frontend/src/pages/Register.js
+import React, { useState } from 'react'; // FIX: Added useState here
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { validateEmail } from '../utils/helpers';
+
+// Import MUI components
+import { Container, Box, TextField, Button, Typography, Alert, Link } from '@mui/material';
 
 const Register = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  
-  const { register } = useAuth();
-  const navigate = useNavigate();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const { register } = useAuth();
+    const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!name || !email || !password || !confirmPassword) {
-      setError('Please fill in all fields');
-      return;
-    }
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        try {
+            await register(email, password);
+            navigate('/dashboard');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to register. Please try again.');
+        }
+    };
 
-    if (!validateEmail(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    const result = await register(name, email, password);
-    
-    if (result.success) {
-      navigate('/');
-    } else {
-      setError(result.message);
-    }
-    
-    setLoading(false);
-  };
-
-  return (
-    <div className="auth-container">
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <h2>Register</h2>
-        
-        {error && <div className="error">{error}</div>}
-        
-        <div className="form-group">
-          <input
-            type="text"
-            placeholder="Full Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="form-control"
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="form-control"
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="form-control"
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="form-control"
-            required
-          />
-        </div>
-        
-        <button 
-          type="submit" 
-          className="btn btn-primary"
-          disabled={loading}
-        >
-          {loading ? 'Registering...' : 'Register'}
-        </button>
-        
-        <p className="text-center mt-20">
-          Already have an account? <Link to="/login">Login here</Link>
-        </p>
-      </form>
-    </div>
-  );
+    return (
+        <Container component="main" maxWidth="xs">
+            <Box
+                sx={{
+                    marginTop: 8,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                }}
+            >
+                <Typography component="h1" variant="h5">
+                    Sign up
+                </Typography>
+                <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+                    {error && <Alert severity="error" sx={{ width: '100%', mb: 2 }}>{error}</Alert>}
+                    <TextField
+                        margin="normal"
+                        required
+                        fullWidth
+                        id="email"
+                        label="Email Address"
+                        name="email"
+                        autoComplete="email"
+                        autoFocus
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <TextField
+                        margin="normal"
+                        required
+                        fullWidth
+                        name="password"
+                        label="Password"
+                        type="password"
+                        id="password"
+                        autoComplete="new-password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        sx={{ mt: 3, mb: 2 }}
+                    >
+                        Sign Up
+                    </Button>
+                    <Typography variant="body2" align="center">
+                        Already have an account?{' '}
+                        <Link component="a" href="/login" variant="body2">
+                            {"Sign In"}
+                        </Link>
+                    </Typography>
+                </Box>
+            </Box>
+        </Container>
+    );
 };
 
 export default Register;

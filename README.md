@@ -23,7 +23,7 @@ The backend provides a RESTful API that the React frontend consumes. Its primary
 * **File Handling**: Multer
 * **Unique IDs**: UUID
 
-## [cite_start]Setup and Installation [cite: 69]
+## Setup and Installation
 
 Follow these instructions to get the backend server running on your local machine.
 
@@ -44,7 +44,7 @@ npm install
 
 Create a file named `.env` in the `backend` root directory. This file will hold your secret keys and configuration variables. Copy the contents of `.env.example` into it and add your own values.
 
-[cite_start]Create a `.env.example` file with the following content (as required by the project specifications [cite: 70]):
+Create a `.env.example` file with the following content (as required by the project specifications ):
 
 ```env
 # The port the server will run on

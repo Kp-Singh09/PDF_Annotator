@@ -1,35 +1,42 @@
+// frontend/src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import Navbar from './components/Navbar';
+import Layout from './components/Layout'; // Import the new Layout
+
+// Pages
+import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
 import PDFViewer from './pages/PDFViewer';
+
+// Global CSS
 import './App.css';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="App">
-          <Navbar />
+        <Layout> {/* Wrap everything in the Layout component */}
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/pdf/:uuid" element={
-              <ProtectedRoute>
-                <PDFViewer />
-              </ProtectedRoute>
-            } />
+            
+            {/* Protected Routes */}
+            <Route 
+              path="/dashboard" 
+              element={<ProtectedRoute><Dashboard /></ProtectedRoute>} 
+            />
+            <Route 
+              path="/pdf/:uuid" 
+              element={<ProtectedRoute><PDFViewer /></ProtectedRoute>} 
+            />
+
+            {/* Redirect root to dashboard if logged in, else to login */}
+            <Route path="/" element={<Navigate to="/dashboard" />} />
           </Routes>
-        </div>
+        </Layout>
       </Router>
     </AuthProvider>
   );

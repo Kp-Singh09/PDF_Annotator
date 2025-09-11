@@ -1,39 +1,20 @@
+// backend/models/Highlight.js
 const mongoose = require('mongoose');
 
-const highlightSchema = new mongoose.Schema({
-  pdf: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'PDF',
-    required: true
-  },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  pageNumber: {
-    type: Number,
-    required: true
-  },
-  text: {
-    type: String,
-    required: true
-  },
-  position: {
-    type: {
-      x: Number,
-      y: Number,
-      width: Number,
-      height: Number
+const HighlightSchema = new mongoose.Schema({
+    pdf: { type: mongoose.Schema.Types.ObjectId, ref: 'PDF', required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    text: { type: String, required: true },
+    position: {
+        x1: Number, y1: Number,
+        x2: Number, y2: Number,
+        width: Number, height: Number,
     },
-    required: true
-  },
-  color: {
-    type: String,
-    default: '#ffeb3b'
-  }
-}, {
-  timestamps: true
+    pageNumber: { type: Number, required: true },
+    color: { type: String, default: 'rgba(255, 255, 0, 0.4)' },
+    intensity: { type: Number, default: 1 },
+    createdAt: { type: Date, default: Date.now },
+    createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Highlight', highlightSchema);
+module.exports = mongoose.model('Highlight', HighlightSchema);

@@ -1,6 +1,9 @@
+// frontend/src/components/Navbar.js
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -12,40 +15,36 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar">
-      <div className="container">
-        <Link to="/" className="navbar-brand">
+    <AppBar position="static">
+      <Toolbar>
+        <PictureAsPdfIcon sx={{ mr: 2 }} />
+        <Typography 
+          variant="h6" 
+          component={RouterLink} 
+          to={user ? "/dashboard" : "/"} 
+          sx={{ flexGrow: 1, color: 'inherit', textDecoration: 'none' }}
+        >
           PDF Annotator
-        </Link>
-        
-        <ul className="navbar-nav">
+        </Typography>
+
+        <Box>
           {user ? (
-            <>
-              <li>
-                <Link to="/">My PDFs</Link>
-              </li>
-              <li>
-                <span>Welcome, {user.name}</span>
-              </li>
-              <li>
-                <button onClick={handleLogout} className="btn btn-primary">
-                  Logout
-                </button>
-              </li>
-            </>
+            <Button color="inherit" onClick={handleLogout}>
+              Logout
+            </Button>
           ) : (
             <>
-              <li>
-                <Link to="/login">Login</Link>
-              </li>
-              <li>
-                <Link to="/register">Register</Link>
-              </li>
+              <Button color="inherit" component={RouterLink} to="/login">
+                Login
+              </Button>
+              <Button color="inherit" component={RouterLink} to="/register">
+                Register
+              </Button>
             </>
           )}
-        </ul>
-      </div>
-    </nav>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 };
 

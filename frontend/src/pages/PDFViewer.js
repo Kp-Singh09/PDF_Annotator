@@ -1,162 +1,181 @@
-import React, { useState, useEffect } from 'react';
+// frontend/src/pages/PDFViewer.js
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { pdfAPI } from '../services/api';
-import { useHighlights } from '../hooks/useHighlights';
-import PDFViewerComponent from '../components/PDFViewerComponent';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+import { highlightsAPI, pdfAPI } from '../services/api';
+import { SketchPicker } from 'react-color';
+
+// MUI Components & Icons
+import { Box, CircularProgress, Typography, Alert, Paper, IconButton, Tooltip, Popover, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ColorLensIcon from '@mui/icons-material/ColorLens';
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
+const DEFAULT_HIGHLIGHT_COLORS = ['rgba(255, 255, 0, 0.4)', 'rgba(173, 216, 230, 0.4)', 'rgba(144, 238, 144, 0.4)', 'rgba(255, 182, 193, 0.4)'];
 
 const PDFViewer = () => {
-  const { uuid } = useParams();
-  const navigate = useNavigate();
-  
-  const [pdf, setPdf] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [scale, setScale] = useState(1.2);
-  const [selectedColor, setSelectedColor] = useState('#ffeb3b');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  
-  const { highlights, addHighlight, updateHighlight, deleteHighlight } = useHighlights(uuid);
+    const { uuid } = useParams();
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchPDF();
-  }, [uuid]);
+    const [numPages, setNumPages] = useState(null);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [scale, setScale] = useState(1.5);
+    const [pdfFileUrl, setPdfFileUrl] = useState(null);
+    const [highlights, setHighlights] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const viewerRef = useRef(null);
+    const [selectedColor, setSelectedColor] = useState(DEFAULT_HIGHLIGHT_COLORS[0]);
+    const [colorPickerAnchor, setColorPickerAnchor] = useState(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [highlightToDelete, setHighlightToDelete] = useState(null);
 
-  const fetchPDF = async () => {
-    try {
-      setLoading(true);
-      const response = await pdfAPI.get(`/${uuid}`);
-      setPdf(response.data.pdf);
-      setError('');
-    } catch (error) {
-      setError(error.response?.data?.message || 'Failed to load PDF');
-      navigate('/');
-    } finally {
-      setLoading(false);
-    }
-  };
+    useEffect(() => {
+        const fetchAllData = async () => {
+            try {
+                setLoading(true);
+                const pdfResponse = await pdfAPI.get(`/${uuid}`);
+                
+                // This is the corrected line
+                const pdfData = pdfResponse.data.pdf;
+                
+                setPdfFileUrl(`${process.env.REACT_APP_API_BASE_URL}/uploads/${pdfData.filename}`);
+    
+                const highlightsResponse = await highlightsAPI.get(`/${uuid}`);
+                setHighlights(highlightsResponse.data.highlights);
+            } catch (err) {
+                setError('Could not load the requested PDF and its highlights.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (uuid) fetchAllData();
+    }, [uuid]);
 
-  const handleTextSelect = async (text, position, pageNumber) => {
-    const result = await addHighlight({
-      pageNumber,
-      text,
-      position,
-      color: selectedColor
-    });
+    const onDocumentLoadSuccess = ({ numPages }) => setNumPages(numPages);
 
-    if (!result.success) {
-      setError(result.message);
-    }
-  };
+    const handleTextSelection = async (e) => {
+        if (e.target.dataset.highlightId) return;
 
-  const goToPreviousPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
-  };
+        const selection = window.getSelection();
+        if (!selection.rangeCount || selection.isCollapsed) return;
+        const text = selection.toString().trim();
+        if (!text) return;
+        const viewerRect = viewerRef.current.getBoundingClientRect();
+        const range = selection.getRangeAt(0);
+        const rangeRect = range.getBoundingClientRect();
+        
+        const position = {
+            x1: rangeRect.left - viewerRect.left, y1: rangeRect.top - viewerRect.top,
+            x2: rangeRect.right - viewerRect.left, y2: rangeRect.bottom - viewerRect.top,
+            width: viewerRect.width, height: viewerRect.height,
+        };
+        const newHighlight = { pdfUuid: uuid, text, position, pageNumber, color: selectedColor };
+        try {
+            const response = await highlightsAPI.post('/', newHighlight);
+            setHighlights(prev => [...prev, response.data.highlight]);
+        } catch (err) { setError('Failed to save highlight.'); }
+        selection.removeAllRanges();
+    };
 
-  const goToNextPage = () => {
-    setCurrentPage(prev => prev + 1);
-  };
+    const handleHighlightClick = async (highlightId) => {
+        try {
+            const response = await highlightsAPI.put(`/${highlightId}/intensity`);
+            const updatedHighlight = response.data.highlight;
+            setHighlights(prev => prev.map(h => h._id === highlightId ? updatedHighlight : h));
+        } catch (err) {
+            setError('Failed to update highlight intensity.');
+        }
+    };
 
-  const zoomIn = () => {
-    setScale(prev => Math.min(prev + 0.2, 3));
-  };
+    const handleHighlightRightClick = (e, highlightId) => {
+        e.preventDefault();
+        setHighlightToDelete(highlightId);
+        setDeleteConfirmOpen(true);
+    };
 
-  const zoomOut = () => {
-    setScale(prev => Math.max(prev - 0.2, 0.5));
-  };
+    const confirmDeleteHighlight = async () => {
+        if (!highlightToDelete) return;
+        try {
+            await highlightsAPI.delete(`/${highlightToDelete}`);
+            setHighlights(prev => prev.filter(h => h._id !== highlightToDelete));
+        } catch (err) { setError('Failed to delete highlight.'); }
+        handleCloseDeleteConfirm();
+    };
 
-  const colorOptions = [
-    '#ffeb3b', // Yellow
-    '#ff9800', // Orange
-    '#f44336', // Red
-    '#4caf50', // Green
-    '#2196f3', // Blue
-    '#9c27b0'  // Purple
-  ];
+    const handleCloseDeleteConfirm = () => {
+        setDeleteConfirmOpen(false);
+        setHighlightToDelete(null);
+    };
 
-  if (loading) {
+    const getDynamicHighlightColor = (colorStr, intensity = 1) => {
+        if (!colorStr) return 'rgba(255, 255, 0, 0.4)';
+        const baseOpacity = 0.4;
+        const finalOpacity = Math.min(baseOpacity * intensity, 1.0);
+        return colorStr.replace(/, \d\.\d\)/, `, ${finalOpacity})`);
+    };
+
+    const renderHighlights = () => highlights
+        .filter(h => h.pageNumber === pageNumber)
+        .map(h => (
+            <div
+                key={h._id}
+                data-highlight-id={h._id}
+                title={h.text}
+                onClick={() => handleHighlightClick(h._id)}
+                onContextMenu={(e) => handleHighlightRightClick(e, h._id)}
+                style={{
+                    position: 'absolute', cursor: 'pointer', zIndex: 10,
+                    left: `${(h.position.x1 / h.position.width) * 100}%`,
+                    top: `${(h.position.y1 / h.position.height) * 100}%`,
+                    width: `${((h.position.x2 - h.position.x1) / h.position.width) * 100}%`,
+                    height: `${((h.position.y2 - h.position.y1) / h.position.height) * 100}%`,
+                    background: getDynamicHighlightColor(h.color, h.intensity),
+                }}
+            />
+        ));
+
+    const handleColorPickerClick = (e) => setColorPickerAnchor(e.currentTarget);
+    const handleColorPickerClose = () => setColorPickerAnchor(null);
+    const handleColorChange = (color) => setSelectedColor(`rgba(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}, 0.4)`);
+    
+    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}><CircularProgress /></Box>;
+    if (error) return <Alert severity="error" sx={{ m: 3 }}>{error}</Alert>;
+    
     return (
-      <div className="pdf-viewer">
-        <div className="container">
-          <div className="loading">Loading PDF...</div>
-        </div>
-      </div>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {/* Toolbar */}
+            <Paper elevation={3} sx={{ position: 'sticky', top: 10, zIndex: 100, p: 1, mb: 2, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
+                {/* Controls... */}
+                <Tooltip title="Back"><IconButton onClick={() => navigate('/dashboard')}><ArrowBackIcon /></IconButton></Tooltip>
+                <Tooltip title="Prev Page"><span><IconButton onClick={() => setPageNumber(p => Math.max(1, p - 1))} disabled={pageNumber <= 1}><NavigateBeforeIcon /></IconButton></span></Tooltip>
+                <Typography>Page {pageNumber} / {numPages}</Typography>
+                <Tooltip title="Next Page"><span><IconButton onClick={() => setPageNumber(p => Math.min(numPages, p + 1))} disabled={pageNumber >= numPages}><NavigateNextIcon /></IconButton></span></Tooltip>
+                <Tooltip title="Zoom Out"><span><IconButton onClick={() => setScale(s => Math.max(0.5, s - 0.2))} disabled={scale <= 0.5}><ZoomOutIcon /></IconButton></span></Tooltip>
+                <Typography>{Math.round(scale * 100)}%</Typography>
+                <Tooltip title="Zoom In"><span><IconButton onClick={() => setScale(s => Math.min(3, s + 0.2))} disabled={scale >= 3}><ZoomInIcon /></IconButton></span></Tooltip>
+                
+                {/* Color Picker */}
+                <Box sx={{ display: 'flex', alignItems: 'center', borderLeft: '1px solid #ccc', ml: 1, pl: 1 }}>
+                    {DEFAULT_HIGHLIGHT_COLORS.map(color => (<Tooltip title="Set color" key={color}><IconButton onClick={() => setSelectedColor(color)}><Box sx={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: color, border: selectedColor === color ? '2px solid #1976d2' : '1px solid #ccc' }}/></IconButton></Tooltip>))}
+                    <Tooltip title="More Colors"><IconButton onClick={handleColorPickerClick}><ColorLensIcon /></IconButton></Tooltip>
+                </Box>
+            </Paper>
+
+            <Popover open={Boolean(colorPickerAnchor)} anchorEl={colorPickerAnchor} onClose={handleColorPickerClose} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}><SketchPicker color={selectedColor} onChangeComplete={handleColorChange} /></Popover>
+    
+            <div ref={viewerRef} onMouseUp={handleTextSelection} style={{ position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}><Document file={pdfFileUrl} onLoadSuccess={onDocumentLoadSuccess} onLoadError={() => setError('Failed to load PDF.')}><Page pageNumber={pageNumber} scale={scale} /></Document>{renderHighlights()}</div>
+
+            <Dialog open={deleteConfirmOpen} onClose={handleCloseDeleteConfirm}><DialogTitle>Delete Highlight?</DialogTitle><DialogContent><DialogContentText>Are you sure you want to delete this highlight?</DialogContentText></DialogContent><DialogActions><Button onClick={handleCloseDeleteConfirm}>Cancel</Button><Button onClick={confirmDeleteHighlight} color="error">Delete</Button></DialogActions></Dialog>
+        </Box>
     );
-  }
-
-  if (!pdf) {
-    return (
-      <div className="pdf-viewer">
-        <div className="container">
-          <div className="error">PDF not found</div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="pdf-viewer">
-      <div className="container">
-        <div className="viewer-controls">
-          <h2>{pdf.originalName}</h2>
-          
-          <div className="viewer-actions">
-            <button onClick={() => navigate('/')} className="btn">
-              Back to Library
-            </button>
-          </div>
-        </div>
-
-        {error && <div className="error">{error}</div>}
-
-        <div className="highlight-toolbar">
-          <span>Highlight Color:</span>
-          <div className="color-picker">
-            {colorOptions.map(color => (
-              <div
-                key={color}
-                className={`color-option ${selectedColor === color ? 'active' : ''}`}
-                style={{ backgroundColor: color }}
-                onClick={() => setSelectedColor(color)}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="page-controls">
-          <button 
-            onClick={goToPreviousPage} 
-            disabled={currentPage <= 1}
-            className="btn"
-          >
-            Previous
-          </button>
-          
-          <span>Page {currentPage}</span>
-          
-          <button 
-            onClick={goToNextPage}
-            className="btn"
-          >
-            Next
-          </button>
-        </div>
-
-        <div className="zoom-controls">
-          <button onClick={zoomOut} className="btn">Zoom Out</button>
-          <span>Scale: {(scale * 100).toFixed(0)}%</span>
-          <button onClick={zoomIn} className="btn">Zoom In</button>
-        </div>
-
-        <PDFViewerComponent
-          file={`${process.env.REACT_APP_API_BASE_URL}/uploads/${pdf.filename}`}
-          highlights={highlights}
-          onTextSelect={handleTextSelect}
-          currentPage={currentPage}
-          scale={scale}
-        />
-      </div>
-    </div>
-  );
 };
 
 export default PDFViewer;

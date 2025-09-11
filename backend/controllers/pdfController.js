@@ -168,3 +168,15 @@ exports.renamePDF = async (req, res) => {
     });
   }
 };
+exports.getPdfDetails = async (req, res) => {
+  try {
+      const pdf = await PDF.findOne({ uuid: req.params.pdfId, user: req.user.id });
+      if (!pdf) {
+          return res.status(404).json({ message: 'PDF not found' });
+      }
+      res.json(pdf);
+  } catch (error) {
+      console.error('Error fetching PDF details:', error);
+      res.status(500).json({ message: 'Server error' });
+  }
+};
