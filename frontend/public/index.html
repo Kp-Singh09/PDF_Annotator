@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2c3e50" />
+    <meta
+      name="description"
+      content="PDF Annotator - Highlight, annotate and manage your PDF documents with ease. Perfect for students, researchers, and professionals."
+    />
+    <meta name="keywords" content="PDF, annotator, highlight, document, editor" />
+    <meta name="author" content="PDF Annotator Team" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://pdf-annotator.example.com/" />
+    <meta property="og:title" content="PDF Annotator - Smart Document Highlighting" />
+    <meta property="og:description" content="Highlight, annotate and manage your PDF documents with our powerful web application." />
+    <meta property="og:image" content="%PUBLIC_URL%/social-preview.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://pdf-annotator.example.com/" />
+    <meta property="twitter:title" content="PDF Annotator - Smart Document Highlighting" />
+    <meta property="twitter:description" content="Highlight, annotate and manage your PDF documents with our powerful web application." />
+    <meta property="twitter:image" content="%PUBLIC_URL%/social-preview.png" />
+
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <title>PDF Annotator - Smart Document Highlighting & Annotation Tool</title>
+
+    <style>
+      /* Loading animation */
+      .app-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-family: 'Inter', sans-serif;
+      }
+      
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      
+      .loading-content {
+        text-align: center;
+        margin-left: 20px;
+      }
+      
+      .loading-content h1 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+      
+      .loading-content p {
+        opacity: 0.8;
+        font-size: 1.1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        <h1>JavaScript Required</h1>
+        <p>PDF Annotator requires JavaScript to function properly. Please enable JavaScript in your browser settings.</p>
+        <p>If you need assistance, please check your browser's documentation or contact support.</p>
+      </div>
+    </noscript>
+    
+    <div id="root">
+      <!-- Loading screen that shows until React app loads -->
+      <div class="app-loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-content">
+          <h1>PDF Annotator</h1>
+          <p>Loading your document experience...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Script to remove loading screen when app loads -->
+    <script>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const loadingElement = document.querySelector('.app-loading');
+          if (loadingElement) {
+            loadingElement.style.opacity = '0';
+            loadingElement.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => loadingElement.remove(), 500);
+          }
+        }, 1000);
+      });
+    </script>
+  </body>
+</html>
