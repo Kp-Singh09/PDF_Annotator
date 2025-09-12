@@ -23,9 +23,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/pdf', require('./routes/pdf'));
+app.use('/api/pdfs', require('./routes/pdf')); // <-- THIS IS THE CORRECTED LINE
 app.use('/api/highlights', require('./routes/highlights'));
 app.use('/api/drawings', require('./routes/drawings'));
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 

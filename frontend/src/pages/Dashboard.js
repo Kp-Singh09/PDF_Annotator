@@ -1,33 +1,47 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { pdfAPI } from '../services/api';
+import React, { useState, useEffect } from "react";
 import {
-    Container, Box, Typography, Button, List, ListItem, ListItemText,
-    CircularProgress, Alert, IconButton, Menu, MenuItem, Dialog,
-    DialogActions, DialogContent, DialogContentText, DialogTitle, TextField
-} from '@mui/material';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+    Container,
+    Box,
+    Typography,
+    Card,
+    CardContent,
+    CardActions,
+    IconButton,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Button,
+    TextField,
+    CircularProgress,
+    Alert,
+    Fab
+} from "@mui/material";
+import DescriptionIcon from "@mui/icons-material/Description";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { useNavigate } from "react-router-dom";
+import { pdfAPI } from '../services/api';
 
 const Dashboard = () => {
     const [pdfs, setPdfs] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
-    const navigate = useNavigate();
-    const fileInputRef = useRef(null);
-
-    // State for menu and dialogs
-    const [anchorEl, setAnchorEl] = useState(null);
-    const [currentPdf, setCurrentPdf] = useState(null);
-    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    
     const [renameOpen, setRenameOpen] = useState(false);
+    const [currentPdf, setCurrentPdf] = useState(null);
     const [newName, setNewName] = useState('');
+
+    const [deleteOpen, setDeleteOpen] = useState(false);
+
+    const navigate = useNavigate();
 
     const fetchPdfs = async () => {
         try {
             setLoading(true);
-            // Use the correct endpoint '/my-pdfs' as defined in your backend
             const response = await pdfAPI.get('/my-pdfs');
             setPdfs(response.data.pdfs);
             setError('');
@@ -48,53 +62,27 @@ const Dashboard = () => {
         if (!file) return;
 
         const formData = new FormData();
-        // The backend upload middleware expects the key 'pdf'
         formData.append('pdf', file);
 
         try {
             setUploading(true);
             setError('');
-            // The upload route is '/upload'
             await pdfAPI.post('/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            await fetchPdfs(); // Refresh the list after upload
+            await fetchPdfs();
         } catch (err) {
-            setError('Failed to upload PDF. Please try again.');
+            setError(err.response?.data?.message || 'File upload failed. Please try again.');
             console.error(err);
         } finally {
             setUploading(false);
-            // Reset the file input
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
         }
-    };
-
-    const handleMenuClick = (event, pdf) => {
-        setAnchorEl(event.currentTarget);
-        setCurrentPdf(pdf);
-    };
-
-    const handleMenuClose = () => {
-        setAnchorEl(null);
-        setCurrentPdf(null);
-    };
-
-    const handleOpenDelete = () => {
-        setDeleteOpen(true);
-        handleMenuClose();
-    };
-
-    const handleCloseDelete = () => {
-        setDeleteOpen(false);
     };
 
     const handleDelete = async () => {
         if (!currentPdf) return;
         try {
-            // The delete route uses the PDF's database _id
-            await pdfAPI.delete(`/${currentPdf._id}`);
+            await pdfAPI.delete(`/${currentPdf.uuid}`);
             await fetchPdfs();
             handleCloseDelete();
         } catch (err) {
@@ -103,24 +91,11 @@ const Dashboard = () => {
         }
     };
 
-    const handleOpenRename = () => {
-        if (currentPdf) {
-            setNewName(currentPdf.name);
-            setRenameOpen(true);
-        }
-        handleMenuClose();
-    };
-
-    const handleCloseRename = () => {
-        setRenameOpen(false);
-        setNewName('');
-    };
-
     const handleRename = async () => {
         if (!currentPdf || !newName) return;
         try {
-            // The rename route uses the PDF's database _id
-            await pdfAPI.put(`/${currentPdf._id}`, { name: newName });
+            const finalName = newName.endsWith('.pdf') ? newName : `${newName}.pdf`;
+            await pdfAPI.put(`/${currentPdf.uuid}/rename`, { originalName: finalName });
             await fetchPdfs();
             handleCloseRename();
         } catch (err) {
@@ -129,93 +104,116 @@ const Dashboard = () => {
         }
     };
 
-    const handlePdfClick = (uuid) => {
-        navigate(`/pdf/${uuid}`);
+    const handleClickOpenRename = (pdf) => {
+        setCurrentPdf(pdf);
+        setNewName(pdf.originalName.replace('.pdf', ''));
+        setRenameOpen(true);
     };
+    const handleCloseRename = () => setRenameOpen(false);
+
+    const handleClickOpenDelete = (pdf) => {
+        setCurrentPdf(pdf);
+        setDeleteOpen(true);
+    };
+    const handleCloseDelete = () => setDeleteOpen(false);
+
+    if (loading) {
+        return <Container sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Container>;
+    }
 
     return (
-        <Container maxWidth="md">
-            <Box sx={{ my: 4 }}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    My PDF Library
-                </Typography>
-                <Button
-                    variant="contained"
-                    component="label"
-                    disabled={uploading}
-                >
-                    Upload PDF
-                    <input
-                        type="file"
-                        hidden
-                        accept="application/pdf"
-                        onChange={handleFileChange}
-                        ref={fileInputRef}
-                    />
-                </Button>
-                {uploading && <CircularProgress size={24} sx={{ ml: 2 }} />}
-                {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-                {loading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                        <CircularProgress />
-                    </Box>
-                ) : (
-                    <List sx={{ mt: 2 }}>
-                        {pdfs.length > 0 ? pdfs.map((pdf) => (
-                            <ListItem
-                                key={pdf.uuid}
-                                secondaryAction={
-                                    <IconButton edge="end" aria-label="options" onClick={(e) => handleMenuClick(e, pdf)}>
-                                        <MoreVertIcon />
-                                    </IconButton>
-                                }
+        <Container sx={{ mt: 4 }}>
+            <Typography variant="h4" gutterBottom>
+                My PDF Library
+            </Typography>
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            
+            {/* **FIX:** Replaced MUI Grid with a Box using CSS Grid */}
+            <Box
+                sx={{
+                    display: 'grid',
+                    gap: 3, // The space between cards
+                    // Defines the columns. It will create as many 1fr columns as can fit,
+                    // but each column will be at least 350px wide. This makes it responsive.
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+                }}
+            >
+                {pdfs.length > 0 ? (
+                    pdfs.map((pdf) => (
+                        <Card
+                            key={pdf._id}
+                            sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between",
+                            }}
+                        >
+                            <CardContent
                                 sx={{
-                                    cursor: 'pointer',
-                                    '&:hover': { backgroundColor: 'action.hover' },
-                                    mb: 1,
-                                    boxShadow: 1,
-                                    borderRadius: 1
+                                    display: "flex",
+                                    alignItems: "center",
                                 }}
                             >
-                                <PictureAsPdfIcon sx={{ mr: 2, color: 'action.active' }} />
-                                <ListItemText
-                                    primary={pdf.name}
-                                    secondary={`Uploaded on: ${new Date(pdf.createdAt).toLocaleDateString()}`}
-                                    onClick={() => handlePdfClick(pdf.uuid)}
+                                <DescriptionIcon
+                                    sx={{
+                                        fontSize: 40,
+                                        mr: 2,
+                                        color: "primary.main",
+                                        flexShrink: 0,
+                                    }}
                                 />
-                            </ListItem>
-                        )) : (
-                            <Typography sx={{ mt: 2 }}>No PDFs found. Upload one to get started!</Typography>
-                        )}
-                    </List>
+                                <Typography
+                                    variant="h6"
+                                    component="div"
+                                    noWrap
+                                    title={pdf.originalName}
+                                    sx={{ flexGrow: 1 }}
+                                >
+                                    {pdf.originalName}
+                                </Typography>
+                            </CardContent>
+                            <CardActions>
+                                <IconButton
+                                    onClick={() => navigate(`/pdf/${pdf.uuid}`)}
+                                    color="primary"
+                                >
+                                    <OpenInNewIcon />
+                                </IconButton>
+                                <IconButton
+                                    onClick={() => handleClickOpenRename(pdf)}
+                                    color="secondary"
+                                >
+                                    <EditIcon />
+                                </IconButton>
+                                <IconButton
+                                    onClick={() => handleClickOpenDelete(pdf)}
+                                    color="error"
+                                >
+                                    <DeleteIcon />
+                                </IconButton>
+                            </CardActions>
+                        </Card>
+                    ))
+                ) : (
+                    <Typography
+                        sx={{ mt: 4, width: "100%", textAlign: "center" }}
+                    >
+                        You haven't uploaded any PDFs yet.
+                    </Typography>
                 )}
             </Box>
 
-            {/* Menu for PDF options */}
-            <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
+            <Fab
+                color="primary"
+                aria-label="add"
+                sx={{ position: 'fixed', bottom: 32, right: 32 }}
+                component="label"
+                disabled={uploading}
             >
-                <MenuItem onClick={handleOpenRename}>Rename</MenuItem>
-                <MenuItem onClick={handleOpenDelete} sx={{ color: 'error.main' }}>Delete</MenuItem>
-            </Menu>
+                {uploading ? <CircularProgress size={24} color="inherit" /> : <UploadFileIcon />}
+                <input type="file" hidden onChange={handleFileChange} accept=".pdf" />
+            </Fab>
 
-            {/* Delete Confirmation Dialog */}
-            <Dialog open={deleteOpen} onClose={handleCloseDelete}>
-                <DialogTitle>Delete PDF</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Are you sure you want to delete "{currentPdf?.name}"? This action cannot be undone.
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDelete}>Cancel</Button>
-                    <Button onClick={handleDelete} color="error">Delete</Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Rename Dialog */}
             <Dialog open={renameOpen} onClose={handleCloseRename}>
                 <DialogTitle>Rename PDF</DialogTitle>
                 <DialogContent>
@@ -223,7 +221,6 @@ const Dashboard = () => {
                         autoFocus
                         margin="dense"
                         label="New Name"
-                        type="text"
                         fullWidth
                         variant="standard"
                         value={newName}
@@ -233,6 +230,22 @@ const Dashboard = () => {
                 <DialogActions>
                     <Button onClick={handleCloseRename}>Cancel</Button>
                     <Button onClick={handleRename}>Rename</Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={deleteOpen} onClose={handleCloseDelete}>
+                <DialogTitle>Delete PDF</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete{" "}
+                        <strong>{currentPdf?.originalName}</strong>?
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDelete}>Cancel</Button>
+                    <Button onClick={handleDelete} color="error">
+                        Delete
+                    </Button>
                 </DialogActions>
             </Dialog>
         </Container>

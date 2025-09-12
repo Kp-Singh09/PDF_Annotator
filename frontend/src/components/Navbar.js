@@ -1,48 +1,41 @@
-// frontend/src/components/Navbar.js
 import React from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import DescriptionIcon from '@mui/icons-material/Description';
+// **NEW:** Import useNavigate to handle navigation
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
+  // **NEW:** Initialize the navigate function
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    // No need to navigate here, ProtectedRoute will handle it
   };
 
   return (
     <AppBar position="static">
       <Toolbar>
-        <PictureAsPdfIcon sx={{ mr: 2 }} />
-        <Typography 
-          variant="h6" 
-          component={RouterLink} 
-          to={user ? "/dashboard" : "/"} 
-          sx={{ flexGrow: 1, color: 'inherit', textDecoration: 'none' }}
+        {/* **MODIFIED:** Wrapped the logo/title in a Box with an onClick handler */}
+        <Box 
+          onClick={() => navigate('/dashboard')} 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            flexGrow: 1, 
+            cursor: 'pointer' // Changes the mouse to a pointer on hover
+          }}
         >
-          PDF Annotator
-        </Typography>
-
-        <Box>
-          {user ? (
-            <Button color="inherit" onClick={handleLogout}>
-              Logout
-            </Button>
-          ) : (
-            <>
-              <Button color="inherit" component={RouterLink} to="/login">
-                Login
-              </Button>
-              <Button color="inherit" component={RouterLink} to="/register">
-                Register
-              </Button>
-            </>
-          )}
+          <DescriptionIcon sx={{ mr: 1 }} />
+          <Typography variant="h6" component="div">
+            PDF Annotator
+          </Typography>
         </Box>
+        <Button color="inherit" onClick={handleLogout}>
+          Logout
+        </Button>
       </Toolbar>
     </AppBar>
   );
