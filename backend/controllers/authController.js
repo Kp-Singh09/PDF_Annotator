@@ -10,13 +10,11 @@ const generateToken = (id) => {
 
 // Register user
 exports.register = async (req, res) => {
-  // FIX: Remove 'username' from here.
-  const { email, password } = req.body;
+  const { name, email, password } = req.body;
 
   try {
-      // Add a check to ensure password is not empty
-      if (!password) {
-          return res.status(400).json({ success: false, message: 'Password is required' });
+      if (!name || !email || !password) {
+          return res.status(400).json({ success: false, message: 'Please provide name, email, and password' });
       }
 
       let user = await User.findOne({ email });
@@ -25,10 +23,13 @@ exports.register = async (req, res) => {
           return res.status(400).json({ success: false, message: 'User already exists' });
       }
 
-      user = new User({ email, password });
+      // FIX: Create the user with the plain password.
+      // The hashing is now handled ONLY by the pre-save hook in User.js
+      user = new User({ name, email, password });
       
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
+      // REMOVED these lines:
+      // const salt = await bcrypt.genSalt(10);
+      // user.password = await bcrypt.hash(password, salt);
 
       await user.save();
       

@@ -1,4 +1,4 @@
-# PDF Annotator - Backend
+# PDF Annotator
 
 This repository contains the backend server for the Full-Stack PDF Annotator application. It is built with Node.js and Express and is responsible for handling user authentication, file storage, and managing highlight data.
 

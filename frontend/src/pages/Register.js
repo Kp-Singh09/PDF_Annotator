@@ -1,12 +1,12 @@
 // frontend/src/pages/Register.js
-import React, { useState } from 'react'; // FIX: Added useState here
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-// Import MUI components
 import { Container, Box, TextField, Button, Typography, Alert, Link } from '@mui/material';
 
 const Register = () => {
+    // FIX: Add state for the name
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -17,10 +17,11 @@ const Register = () => {
         e.preventDefault();
         setError('');
         try {
-            await register(email, password);
+            // FIX: Pass the 'name' to the register function
+            await register(name, email, password);
             navigate('/dashboard');
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to register. Please try again.');
+            setError(err.message || 'Failed to register. Please try again.');
         }
     };
 
@@ -39,6 +40,20 @@ const Register = () => {
                 </Typography>
                 <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
                     {error && <Alert severity="error" sx={{ width: '100%', mb: 2 }}>{error}</Alert>}
+                    
+                    {/* FIX: Add the TextField for Name */}
+                    <TextField
+                        margin="normal"
+                        required
+                        fullWidth
+                        id="name"
+                        label="Full Name"
+                        name="name"
+                        autoComplete="name"
+                        autoFocus
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                    />
                     <TextField
                         margin="normal"
                         required
@@ -47,7 +62,6 @@ const Register = () => {
                         label="Email Address"
                         name="email"
                         autoComplete="email"
-                        autoFocus
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
