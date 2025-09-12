@@ -3,30 +3,22 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 
-const { 
-    createHighlight, 
-    getHighlights, 
-    deleteHighlight, 
-    updateHighlightIntensity,
-    updateHighlight // Assuming you might have this from an older version
+const {
+    createHighlight,
+    getHighlights,
+    deleteHighlight,
+    updateHighlightIntensity
 } = require('../controllers/highlightController');
 
-// GET highlights for a specific PDF using its UUID
-// FIX: The parameter must be named 'pdfUuid' to match the controller
-router.get('/:pdfUuid', auth, getHighlights);
+// --- CORRECTED ROUTE ORDER ---
 
-// POST a new highlight
+// POST /api/highlights/
 router.post('/', auth, createHighlight);
 
-// DELETE a specific highlight by its own _id
+// DELETE /api/highlights/:id
 router.delete('/:id', auth, deleteHighlight);
 
-// PUT to update a highlight's intensity by its own _id
-router.put('/:id/intensity', auth, updateHighlightIntensity);
-
-// (Optional) If you have an updateHighlight function for text/color, ensure its route is correct too
-if (updateHighlight) {
-    router.put('/:id', auth, updateHighlight);
-}
+// GET /api/highlights/:pdfUuid
+router.get('/:pdfUuid', auth, getHighlights);
 
 module.exports = router;
