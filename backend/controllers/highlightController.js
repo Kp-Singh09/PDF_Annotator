@@ -1,63 +1,83 @@
-const Drawing = require('../models/Drawing');
+const Highlight = require('../models/Highlight');
 const PDF = require('../models/PDF');
 
-exports.createDrawing = async (req, res) => {
-    const { pdfUuid, pageNumber, color, lineWidth, shape, path, startX, startY, endX, endY } = req.body;
+// Create a new highlight
+const createHighlight = async (req, res) => {
+    const { pdfUuid, text, position, pageNumber, color, note } = req.body;
     const userId = req.user.id;
     try {
         const pdf = await PDF.findOne({ uuid: pdfUuid, user: userId });
-        if (!pdf) return res.status(404).json({ success: false, message: 'PDF not found' });
-        const newDrawing = new Drawing({ pdf: pdf._id, user: userId, pageNumber, color, lineWidth, shape, path, startX, startY, endX, endY });
-        await newDrawing.save();
-        res.status(201).json({ success: true, drawing: newDrawing });
+        if (!pdf) {
+            return res.status(404).json({ success: false, message: 'PDF not found' });
+        }
+        const newHighlight = new Highlight({
+            pdf: pdf._id,
+            user: userId,
+            text,
+            position,
+            pageNumber,
+            color,
+            note
+        });
+        await newHighlight.save();
+        res.status(201).json({ success: true, highlight: newHighlight });
     } catch (error) {
+        console.error("Error creating highlight:", error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-exports.getDrawings = async (req, res) => {
+// Get all highlights for a specific PDF
+const getHighlightsForPdf = async (req, res) => {
     const { pdfUuid } = req.params;
     const userId = req.user.id;
     try {
         const pdf = await PDF.findOne({ uuid: pdfUuid, user: userId });
-        if (!pdf) return res.status(404).json({ success: false, message: 'PDF not found' });
-        const drawings = await Drawing.find({ pdf: pdf._id, user: userId });
-        res.json({ success: true, drawings });
+        if (!pdf) {
+            return res.status(404).json({ success: false, message: 'PDF not found' });
+        }
+        const highlights = await Highlight.find({ pdf: pdf._id, user: userId });
+        res.json({ success: true, highlights });
+    } catch (error) {
+        console.error("Error fetching highlights:", error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// Update a highlight
+const updateHighlight = async (req, res) => {
+    const { color, note } = req.body;
+    try {
+        const highlight = await Highlight.findOne({ _id: req.params.id, user: req.user.id });
+        if (!highlight) {
+            return res.status(404).json({ success: false, message: 'Highlight not found' });
+        }
+        if (color) highlight.color = color;
+        if (note !== undefined) highlight.note = note;
+        await highlight.save();
+        res.json({ success: true, highlight });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-exports.updateDrawing = async (req, res) => {
+// Delete a highlight
+const deleteHighlight = async (req, res) => {
     try {
-        const drawing = await Drawing.findOne({ _id: req.params.id, user: req.user.id });
-        if (!drawing) {
-            return res.status(404).json({ success: false, message: 'Drawing not found' });
+        const highlight = await Highlight.findOne({ _id: req.params.id, user: req.user.id });
+        if (!highlight) {
+            return res.status(404).json({ success: false, message: 'Highlight not found' });
         }
-
-        const { path, startX, startY, endX, endY } = req.body;
-        if (path) drawing.path = path;
-        if (startX !== undefined) drawing.startX = startX;
-        if (startY !== undefined) drawing.startY = startY;
-        if (endX !== undefined) drawing.endX = endX;
-        if (endY !== undefined) drawing.endY = endY;
-
-        await drawing.save();
-        res.json({ success: true, drawing });
+        await highlight.deleteOne();
+        res.json({ success: true, message: 'Highlight deleted successfully' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-exports.deleteDrawing = async (req, res) => {
-    try {
-        const drawing = await Drawing.findOne({ _id: req.params.id, user: req.user.id });
-        if (!drawing) {
-            return res.status(404).json({ success: false, message: 'Drawing not found' });
-        }
-        await drawing.deleteOne();
-        res.json({ success: true, message: 'Drawing deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
+module.exports = {
+  createHighlight,
+  getHighlightsForPdf, // This is the correct exported name
+  updateHighlight,
+  deleteHighlight
 };
