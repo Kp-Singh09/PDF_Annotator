@@ -297,8 +297,9 @@ const PDFViewer = () => {
         const rect = canvasRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-
-        if (isMoving && selectedDrawing) {
+        
+        // --- THIS IS THE FIX ---
+        if (isMoving && selectedDrawing && startPoint) {
             const dx = (x - startPoint.x) / scale;
             const dy = (y - startPoint.y) / scale;
             const { originalDrawing } = startPoint;
@@ -657,7 +658,7 @@ const PDFViewer = () => {
                                zIndex: drawingMode ? 5 : -1,
                                cursor: eraserMode ? `url(${ERASER_CURSOR_URL}) 4 18, auto` : (isMoving ? 'move' : (drawingMode ? 'crosshair' : 'default')),
                            }}
-                       />
+                        />
                     </>
                 )}
             </div>
