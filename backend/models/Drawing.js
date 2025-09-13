@@ -6,11 +6,11 @@ const DrawingSchema = new mongoose.Schema({
     pageNumber: { type: Number, required: true },
     color: { type: String, default: '#000000' },
     lineWidth: { type: Number, default: 2 },
-    // Shape type: 'freehand', 'rectangle', 'circle', 'arrow'
+
     shape: { type: String, required: true, default: 'freehand' },
-    // For freehand drawings
+
     path: [{ x: Number, y: Number }],
-    // For shapes (rectangle, circle, arrow)
+
     startX: { type: Number },
     startY: { type: Number },
     endX: { type: Number },

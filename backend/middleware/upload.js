@@ -3,13 +3,11 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 
-// Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Configure storage for PDF files
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadsDir);
@@ -20,7 +18,6 @@ const storage = multer.diskStorage({
   }
 });
 
-// File filter for PDFs only
 const fileFilter = (req, file, cb) => {
   if (file.mimetype === 'application/pdf') {
     cb(null, true);
@@ -29,16 +26,14 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Create the multer instance
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 10 * 1024 * 1024 
   }
 });
 
-// Error handling middleware for multer
 const handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
@@ -56,7 +51,6 @@ const handleUploadError = (err, req, res, next) => {
   next();
 };
 
-// Export the upload instance and error handler
 module.exports = {
   upload: upload,
   handleUploadError: handleUploadError

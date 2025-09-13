@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// 1. Import your custom 'useAuth' hook instead of 'AuthContext'
+
 import { useAuth } from '../context/AuthContext';
 
-// Import MUI components
 import { Container, Box, TextField, Button, Typography, Alert } from '@mui/material';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  // 2. Use the 'useAuth' hook to get the login function
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -21,7 +20,7 @@ const Login = () => {
       await login(email, password);
       navigate('/dashboard');
     } catch (err) {
-      // It's better to get the error message from the response if available
+
       const errorMessage = err.response?.data?.message || err.message || 'Failed to log in. Please check your credentials.';
       setError(errorMessage);
     }

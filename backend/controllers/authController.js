@@ -1,14 +1,13 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-// Generate JWT Token
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
   });
 };
 
-// Register user
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -23,16 +22,10 @@ exports.register = async (req, res) => {
           return res.status(400).json({ success: false, message: 'User already exists' });
       }
 
-      // FIX: Create the user with the plain password.
-      // The hashing is now handled ONLY by the pre-save hook in User.js
       user = new User({ name, email, password });
-      
-      // REMOVED these lines:
-      // const salt = await bcrypt.genSalt(10);
-      // user.password = await bcrypt.hash(password, salt);
 
       await user.save();
-      
+
       const payload = { user: { id: user.id } };
       jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
           if (err) throw err;
@@ -45,12 +38,10 @@ exports.register = async (req, res) => {
   }
 };
 
-// Login user
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
-    // Check if user exists
+
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ 
@@ -59,7 +50,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ 
@@ -68,7 +58,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Generate token
     const token = generateToken(user._id);
 
     res.json({
@@ -89,7 +78,6 @@ exports.login = async (req, res) => {
   }
 };
 
-// Get current user
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');

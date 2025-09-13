@@ -1,7 +1,6 @@
 const Drawing = require('../models/Drawing');
 const PDF = require('../models/PDF');
 
-// Create a new drawing or shape
 exports.createDrawing = async (req, res) => {
     const { pdfUuid, pageNumber, color, lineWidth, shape, path, startX, startY, endX, endY } = req.body;
     const userId = req.user.id;
@@ -16,7 +15,6 @@ exports.createDrawing = async (req, res) => {
     }
 };
 
-// Get all drawings for a specific PDF
 exports.getDrawings = async (req, res) => {
     const { pdfUuid } = req.params;
     const userId = req.user.id;
@@ -30,7 +28,6 @@ exports.getDrawings = async (req, res) => {
     }
 };
 
-// **NEW:** Update a drawing's position or properties
 exports.updateDrawing = async (req, res) => {
     try {
         const drawing = await Drawing.findOne({ _id: req.params.id, user: req.user.id });
@@ -38,7 +35,6 @@ exports.updateDrawing = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Drawing not found' });
         }
 
-        // Update fields provided in the request body
         const { path, startX, startY, endX, endY } = req.body;
         if (path) drawing.path = path;
         if (startX !== undefined) drawing.startX = startX;
@@ -53,8 +49,6 @@ exports.updateDrawing = async (req, res) => {
     }
 };
 
-
-// Delete a specific drawing
 exports.deleteDrawing = async (req, res) => {
     try {
         const drawing = await Drawing.findOne({ _id: req.params.id, user: req.user.id });

@@ -30,7 +30,7 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [uploading, setUploading] = useState(false);
-    
+
     const [renameOpen, setRenameOpen] = useState(false);
     const [currentPdf, setCurrentPdf] = useState(null);
     const [newName, setNewName] = useState('');
@@ -127,14 +127,13 @@ const Dashboard = () => {
                 My PDF Library
             </Typography>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-            
-            {/* **FIX:** Replaced MUI Grid with a Box using CSS Grid */}
+
+            {}
             <Box
                 sx={{
                     display: 'grid',
-                    gap: 3, // The space between cards
-                    // Defines the columns. It will create as many 1fr columns as can fit,
-                    // but each column will be at least 350px wide. This makes it responsive.
+                    gap: 3, 
+
                     gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
                 }}
             >

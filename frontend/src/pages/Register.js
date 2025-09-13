@@ -1,11 +1,10 @@
-// frontend/src/pages/Register.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Container, Box, TextField, Button, Typography, Alert, Link } from '@mui/material';
 
 const Register = () => {
-    // FIX: Add state for the name
+
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -17,7 +16,7 @@ const Register = () => {
         e.preventDefault();
         setError('');
         try {
-            // FIX: Pass the 'name' to the register function
+
             await register(name, email, password);
             navigate('/dashboard');
         } catch (err) {
@@ -40,8 +39,8 @@ const Register = () => {
                 </Typography>
                 <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
                     {error && <Alert severity="error" sx={{ width: '100%', mb: 2 }}>{error}</Alert>}
-                    
-                    {/* FIX: Add the TextField for Name */}
+
+                    {}
                     <TextField
                         margin="normal"
                         required

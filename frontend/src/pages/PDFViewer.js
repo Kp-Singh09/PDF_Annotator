@@ -6,7 +6,6 @@ import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { highlightsAPI, pdfAPI, drawingsAPI } from '../services/api';
 import { SketchPicker } from 'react-color';
 
-// Import MUI components
 import {
     Box, CircularProgress, Typography, Alert, Paper, IconButton, Tooltip, Popover,
     Stack, Divider, TextField, Button, Dialog, DialogActions, DialogContent,

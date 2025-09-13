@@ -4,7 +4,6 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
 
-// Upload PDF
 exports.uploadPDF = async (req, res) => {
   try {
     if (!req.file) {
@@ -25,8 +24,7 @@ exports.uploadPDF = async (req, res) => {
     });
 
     await pdf.save();
-    
-    // Populate user info
+
     await pdf.populate('user', 'name email');
 
     res.status(201).json({
@@ -42,7 +40,6 @@ exports.uploadPDF = async (req, res) => {
   }
 };
 
-// Get all PDFs for user
 exports.getUserPDFs = async (req, res) => {
   try {
     const pdfs = await PDF.find({ user: req.user.id })
@@ -63,7 +60,6 @@ exports.getUserPDFs = async (req, res) => {
   }
 };
 
-// Get single PDF
 exports.getPDF = async (req, res) => {
   try {
     const pdf = await PDF.findOne({ 
@@ -91,7 +87,6 @@ exports.getPDF = async (req, res) => {
   }
 };
 
-// Delete PDF
 exports.deletePDF = async (req, res) => {
   try {
     const pdf = await PDF.findOne({ 
@@ -106,16 +101,13 @@ exports.deletePDF = async (req, res) => {
       });
     }
 
-    // Delete file from filesystem
     const filePath = path.join(__dirname, '..', pdf.path);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
 
-    // Delete all highlights associated with this PDF
     await Highlight.deleteMany({ pdf: pdf._id });
 
-    // Delete PDF record
     await PDF.findByIdAndDelete(pdf._id);
 
     res.json({
@@ -131,11 +123,10 @@ exports.deletePDF = async (req, res) => {
   }
 };
 
-// Rename PDF
 exports.renamePDF = async (req, res) => {
   try {
     const { originalName } = req.body;
-    
+
     if (!originalName) {
       return res.status(400).json({ 
         success: false, 

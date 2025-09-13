@@ -1,4 +1,3 @@
-// Utility functions
 exports.formatFileSize = (bytes) => {
   if (bytes === 0) return '0 Bytes';
   

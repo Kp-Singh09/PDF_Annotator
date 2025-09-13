@@ -17,7 +17,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-  // Helper to set headers on all api instances
   const setAuthHeaders = (token) => {
     authAPI.defaults.headers.Authorization = `Bearer ${token}`;
     pdfAPI.defaults.headers.Authorization = `Bearer ${token}`;
@@ -45,13 +44,13 @@ export const AuthProvider = ({ children }) => {
           setLoading(false);
         } else {
           setAuthHeaders(token);
-          // **THIS IS THE CRUCIAL FIX:** Fetch user data on page load
+
           authAPI.get('/me')
             .then(res => {
               setUser(res.data.user);
             })
             .catch(() => {
-              // If token is invalid, logout
+
               logout();
             })
             .finally(() => {
@@ -59,7 +58,7 @@ export const AuthProvider = ({ children }) => {
             });
         }
       } catch (error) {
-          // Handle invalid token format
+
           logout();
           setLoading(false);
       }
@@ -72,12 +71,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.post('/login', { email, password });
       const { token: newToken, user: userData } = response.data;
-      
+
       localStorage.setItem('token', newToken);
       setToken(newToken);
       setUser(userData);
       setAuthHeaders(newToken);
-      
+
       return { success: true };
     } catch (error) {
         throw error;
@@ -88,12 +87,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.post('/register', { name, email, password });
       const { token: newToken, user: userData } = response.data;
-      
+
       localStorage.setItem('token', newToken);
       setToken(newToken);
       setUser(userData);
       setAuthHeaders(newToken);
-      
+
       return { success: true };
     } catch (error) {
         throw error;
