@@ -1,7 +1,7 @@
 const Highlight = require('../models/Highlight');
 const PDF = require('../models/PDF');
 
-// Create a new highlight
+
 const createHighlight = async (req, res) => {
     const { pdfUuid, text, position, pageNumber, color, note } = req.body;
     const userId = req.user.id;
@@ -27,7 +27,6 @@ const createHighlight = async (req, res) => {
     }
 };
 
-// Get all highlights for a specific PDF
 const getHighlightsForPdf = async (req, res) => {
     const { pdfUuid } = req.params;
     const userId = req.user.id;
@@ -44,7 +43,7 @@ const getHighlightsForPdf = async (req, res) => {
     }
 };
 
-// Update a highlight
+
 const updateHighlight = async (req, res) => {
     const { color, note } = req.body;
     try {
@@ -77,7 +76,7 @@ const deleteHighlight = async (req, res) => {
 
 module.exports = {
   createHighlight,
-  getHighlightsForPdf, // This is the correct exported name
+  getHighlightsForPdf,
   updateHighlight,
   deleteHighlight
 };

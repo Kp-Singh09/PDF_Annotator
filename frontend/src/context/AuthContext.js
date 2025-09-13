@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
+  // **FIX:** A helper function to ensure the token is set on ALL API instances
   const setAuthHeaders = (token) => {
     authAPI.defaults.headers.Authorization = `Bearer ${token}`;
     pdfAPI.defaults.headers.Authorization = `Bearer ${token}`;
@@ -35,32 +36,27 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
+    const tokenInStorage = localStorage.getItem('token');
+    if (tokenInStorage) {
       try {
-        const decoded = jwtDecode(token);
+        const decoded = jwtDecode(tokenInStorage);
         if (decoded.exp * 1000 < Date.now()) {
           logout();
           setLoading(false);
         } else {
-          setAuthHeaders(token);
-
+          setAuthHeaders(tokenInStorage);
+          // **FIX:** This fetches user data on page refresh, preventing redirection
           authAPI.get('/me')
             .then(res => {
               setUser(res.data.user);
             })
-            .catch(() => {
-
-              logout();
-            })
-            .finally(() => {
-              setLoading(false);
-            });
+            .catch(() => logout()) // If token is invalid, log out
+            .finally(() => setLoading(false));
         }
       } catch (error) {
-
-          logout();
-          setLoading(false);
+        // If token is malformed
+        logout();
+        setLoading(false);
       }
     } else {
       setLoading(false);
@@ -68,35 +64,23 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    try {
-      const response = await authAPI.post('/login', { email, password });
-      const { token: newToken, user: userData } = response.data;
-
-      localStorage.setItem('token', newToken);
-      setToken(newToken);
-      setUser(userData);
-      setAuthHeaders(newToken);
-
-      return { success: true };
-    } catch (error) {
-        throw error;
-    }
+    const response = await authAPI.post('/login', { email, password });
+    const { token: newToken, user: userData } = response.data;
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
+    setUser(userData);
+    setAuthHeaders(newToken); // Use the helper
+    return { success: true };
   };
 
   const register = async (name, email, password) => {
-    try {
-      const response = await authAPI.post('/register', { name, email, password });
-      const { token: newToken, user: userData } = response.data;
-
-      localStorage.setItem('token', newToken);
-      setToken(newToken);
-      setUser(userData);
-      setAuthHeaders(newToken);
-
-      return { success: true };
-    } catch (error) {
-        throw error;
-    }
+    const response = await authAPI.post('/register', { name, email, password });
+    const { token: newToken, user: userData } = response.data;
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
+    setUser(userData);
+    setAuthHeaders(newToken); // Use the helper
+    return { success: true };
   };
 
   const value = {
